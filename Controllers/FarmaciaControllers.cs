@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Api_Farmacias.Model;
 using Api_Farmancias.Repositorio.InterFace;
 using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
 
 namespace Api_Farmacias.Controllers
 {
@@ -13,23 +14,38 @@ namespace Api_Farmacias.Controllers
     public class FarmaciaControllers:ControllerBase
     {
         protected readonly IFarmaciaRepisitory _farmfonte;
-        public FarmaciaControllers(IFarmaciaRepisitory farmfonte)
+        private readonly IMapper _mapper;
+        public FarmaciaControllers(IFarmaciaRepisitory farmfonte,IMapper mapper)//Imaper adiciona a injecao de dpeendencia do automaper no controlleer
         {
             _farmfonte=farmfonte;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<ActionResult<List<Farmacia>>> BuscartodasFarmacia()
         {
             List<Farmacia> farmacias = await _farmfonte.Farmancias();
-            return Ok(farmacias);
+           
+            var FarmaciaRetorno = _mapper.Map<FarmaciaDTO>(farmacias);
+
+
+            return FarmaciaRetorno != null
+            ? Ok(FarmaciaRetorno)
+            :BadRequest("Ainda não possui farmacias cadastradas.");
         }
         
         [HttpGet("{id}")]
         public async Task<ActionResult<Farmacia>> Buscarfarmacia(int id)
-        {
+        {       
             Farmacia farmacias = await _farmfonte.BuscarFarmacia(id);
-            return Ok(farmacias);
+            
+            var FarmaciaRetorno = _mapper.Map<FarmaciaDTO>(farmacias);
+
+
+            return FarmaciaRetorno != null
+            ? Ok(FarmaciaRetorno)
+            :BadRequest("Farmacia não encontrada");
+            
         }
 
         [HttpPost]
@@ -37,7 +53,12 @@ namespace Api_Farmacias.Controllers
         public async Task<ActionResult<Farmacia>>Adicionarfarm([FromBody] Farmacia farmacia)
         {
             Farmacia farmacias = await _farmfonte.AdicionarFarmacia(farmacia);
-            return Ok(farmacias);
+           
+          // var Farmaciacriada = _mapper.Map<FarmaciaDTO>(farmacias);
+
+
+            return Ok(farmacia);
+            
         }
 
         [HttpPut("{id}")]
